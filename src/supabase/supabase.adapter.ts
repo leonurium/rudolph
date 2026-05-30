@@ -1,4 +1,8 @@
 import { Injectable, Logger } from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
+import { NotionChunk } from './entities/notion-chunk.entity';
+import { NotionDocument } from './entities/notion-document.entity';
 
 export interface SearchResult {
   chunk_text: string;
@@ -11,49 +15,42 @@ export interface SearchResult {
 @Injectable()
 export class SupabaseAdapter {
   private readonly logger = new Logger(SupabaseAdapter.name);
-  private readonly url: string;
-  private readonly key: string;
 
-  constructor() {
-    this.url = process.env.SUPABASE_URL || '';
-    this.key = process.env.SUPABASE_KEY || '';
-
-    if (!this.url || !this.key) {
-      this.logger.warn('SUPABASE_URL or SUPABASE_KEY not set');
-    }
-  }
+  constructor(
+    @InjectRepository(NotionChunk)
+    private readonly chunkRepo: Repository<NotionChunk>,
+    @InjectRepository(NotionDocument)
+    private readonly docRepo: Repository<NotionDocument>,
+  ) {}
 
   async search(
     embedding: number[],
     topK = 5,
     threshold = 0.5,
   ): Promise<SearchResult[]> {
-    const fnUrl = `${this.url}/rest/v1/rpc/match_notion_chunks`;
-
     this.logger.debug(`Searching pgvector (top_k=${topK}, threshold=${threshold})`);
 
-    const resp = await fetch(fnUrl, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'apikey': this.key,
-        'Authorization': `Bearer ${this.key}`,
-      },
-      body: JSON.stringify({
-        query_embedding: embedding,
-        match_count: topK,
-        match_threshold: threshold,
-      }),
-    });
+    const embeddingStr = `[${embedding.join(',')}]`;
 
-    if (!resp.ok) {
-      const errText = await resp.text();
-      this.logger.error(`Supabase search failed: ${resp.status} ${errText}`);
-      throw new Error(`Supabase search failed: ${resp.status}`);
-    }
+    const results = await this.chunkRepo.query(
+      `
+      SELECT
+        nc.chunk_text,
+        nd.title AS document_title,
+        nd.id AS document_id,
+        nc.chunk_index,
+        1 - (nc.embedding <=> $1::vector) AS similarity
+      FROM notion_chunks nc
+      JOIN notion_documents nd ON nd.id = nc.document_id
+      WHERE nc.embedding IS NOT NULL
+      ORDER BY nc.embedding <=> $1::vector
+      LIMIT $2
+      `,
+      [embeddingStr, topK],
+    );
 
-    const data: SearchResult[] = await resp.json();
-    this.logger.debug(`Found ${data.length} results`);
-    return data;
+    const filtered = results.filter((r: any) => r.similarity >= threshold);
+    this.logger.debug(`Found ${filtered.length} results`);
+    return filtered;
   }
 }
