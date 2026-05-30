@@ -4,7 +4,8 @@
   "buildCommand": "npx nest build",
   "functions": {
     "api/index.ts": {
-      "includeFiles": "dist/**"
+      "includeFiles": "dist/**",
+      "runtime": "nodejs20.x"
     }
   },
   "rewrites": [
