@@ -2,17 +2,12 @@
   "version": 2,
   "installCommand": "npm install --legacy-peer-deps",
   "buildCommand": "npx nest build",
-  "builds": [
-    {
-      "src": "api/index.ts",
-      "use": "@vercel/node",
-      "config": {
-        "includeFiles": ["dist/**"],
-        "nodeVersion": "20.x"
-      }
+  "functions": {
+    "api/index.ts": {
+      "includeFiles": "dist/**"
     }
-  ],
-  "routes": [
-    { "src": "/(.*)", "dest": "/api/index.ts" }
+  },
+  "rewrites": [
+    { "source": "/(.*)", "destination": "/api/index" }
   ]
 }
