@@ -1,5 +1,8 @@
 "use strict";
 
+// Legacy serverless handler — Vercel zero-config NestJS uses src/main.ts instead.
+// Kept for local reference; the api/ folder is listed in .vercelignore.
+
 let cachedHandler;
 
 async function getHandler() {

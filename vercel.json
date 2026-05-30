@@ -1,17 +1,4 @@
 {
-  "version": 2,
   "buildCommand": "npm run build",
-  "installCommand": "npm install --include=dev",
-  "rewrites": [
-    {
-      "source": "/(.*)",
-      "destination": "/api/index"
-    }
-  ],
-  "functions": {
-    "api/index.js": {
-      "includeFiles": "dist/**",
-      "maxDuration": 60
-    }
-  }
+  "installCommand": "npm install --include=dev"
 }

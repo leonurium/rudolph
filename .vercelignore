@@ -1,3 +1,4 @@
 coverage
 **/*.spec.ts
 sql
+api
