@@ -1,6 +1,6 @@
 {
   "version": 2,
-  "buildCommand": "npm run build",
+  "buildCommand": "npx nest build",
   "installCommand": "npm install --include=dev",
   "rewrites": [
     { "source": "/(.*)", "destination": "/api/index" }
