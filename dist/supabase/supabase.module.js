@@ -8,14 +8,17 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.SupabaseModule = void 0;
 const common_1 = require("@nestjs/common");
+const typeorm_1 = require("@nestjs/typeorm");
 const supabase_adapter_1 = require("./supabase.adapter");
+const notion_chunk_entity_1 = require("./entities/notion-chunk.entity");
+const notion_document_entity_1 = require("./entities/notion-document.entity");
 let SupabaseModule = class SupabaseModule {
 };
 exports.SupabaseModule = SupabaseModule;
 exports.SupabaseModule = SupabaseModule = __decorate([
     (0, common_1.Module)({
+        imports: [typeorm_1.TypeOrmModule.forFeature([notion_chunk_entity_1.NotionChunk, notion_document_entity_1.NotionDocument])],
         providers: [supabase_adapter_1.SupabaseAdapter],
         exports: [supabase_adapter_1.SupabaseAdapter],
     })
 ], SupabaseModule);
-//# sourceMappingURL=supabase.module.js.map

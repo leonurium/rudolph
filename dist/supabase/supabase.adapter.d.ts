@@ -1,3 +1,6 @@
+import { Repository } from 'typeorm';
+import { NotionChunk } from './entities/notion-chunk.entity';
+import { NotionDocument } from './entities/notion-document.entity';
 export interface SearchResult {
     chunk_text: string;
     document_title: string;
@@ -6,9 +9,9 @@ export interface SearchResult {
     similarity: number;
 }
 export declare class SupabaseAdapter {
+    private readonly chunkRepo;
+    private readonly docRepo;
     private readonly logger;
-    private readonly url;
-    private readonly key;
-    constructor();
+    constructor(chunkRepo: Repository<NotionChunk>, docRepo: Repository<NotionDocument>);
     search(embedding: number[], topK?: number, threshold?: number): Promise<SearchResult[]>;
 }

@@ -9,26 +9,26 @@ import {
 @Entity('notion_documents', { schema: 'public' })
 export class NotionDocument {
   @PrimaryGeneratedColumn('uuid')
-  id: string;
+  id!: string;
 
   @Column({ name: 'notion_page_id', type: 'text' })
-  notionPageId: string;
+  notionPageId!: string;
 
   @Column({ name: 'notion_database_id', type: 'text' })
-  notionDatabaseId: string;
+  notionDatabaseId!: string;
 
   @Column({ type: 'text' })
-  title: string;
+  title!: string;
 
   @Column({ type: 'text' })
-  url: string;
+  url!: string;
 
   @Column({ type: 'jsonb', nullable: true })
-  metadata: any;
+  metadata!: Record<string, unknown> | null;
 
   @CreateDateColumn({ name: 'created_at' })
-  createdAt: Date;
+  createdAt!: Date;
 
   @UpdateDateColumn({ name: 'updated_at' })
-  updatedAt: Date;
+  updatedAt!: Date;
 }

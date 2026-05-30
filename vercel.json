@@ -1,14 +1,17 @@
 {
   "version": 2,
-  "buildCommand": "npx tsc -p tsconfig.build.json",
+  "buildCommand": "npm run build",
   "installCommand": "npm install --include=dev",
   "rewrites": [
-    { "source": "/(.*)", "destination": "/api/index" }
+    {
+      "source": "/(.*)",
+      "destination": "/api/index"
+    }
   ],
   "functions": {
     "api/index.js": {
       "includeFiles": "dist/**",
-      "maxDuration": 30
+      "maxDuration": 60
     }
   }
 }

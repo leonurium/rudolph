@@ -1,3 +1,4 @@
+import 'dotenv/config';
 import { createConfiguredNestApp } from './bootstrap-app';
 
 async function bootstrap(): Promise<void> {

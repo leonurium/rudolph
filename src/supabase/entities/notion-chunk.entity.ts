@@ -3,23 +3,23 @@ import { Entity, PrimaryColumn, Column, CreateDateColumn } from 'typeorm';
 @Entity('notion_chunks', { schema: 'public' })
 export class NotionChunk {
   @PrimaryColumn({ type: 'text' })
-  id: string;
+  id!: string;
 
   @Column({ name: 'document_id', type: 'uuid' })
-  documentId: string;
+  documentId!: string;
 
   @Column({ name: 'chunk_text', type: 'text' })
-  chunkText: string;
+  chunkText!: string;
 
   @Column({ type: 'varchar', nullable: true })
-  embedding: string;
+  embedding!: string | null;
 
   @Column({ name: 'chunk_index', type: 'integer' })
-  chunkIndex: number;
+  chunkIndex!: number;
 
   @Column({ name: 'content_hash', type: 'text', nullable: true })
-  contentHash: string;
+  contentHash!: string | null;
 
   @CreateDateColumn({ name: 'created_at' })
-  createdAt: Date;
+  createdAt!: Date;
 }

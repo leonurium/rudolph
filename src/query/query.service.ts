@@ -57,34 +57,35 @@ export class QueryService {
 
     const prompt = `Context:\n${context}\n\nQuestion: ${question}\n\nAnswer:`;
 
-    // 4. Start streaming LLM
+    // 4. Start streaming LLM (latency fields updated as the stream runs)
     const llmStart = Date.now();
     let firstToken = true;
-    let llmFirstTokenTime = 0;
+    const latency = {
+      embed: embedTime,
+      search: searchTime,
+      llmFirstToken: 0,
+      total: 0,
+    };
+
+    const setupTime = Date.now() - start;
+    this.logger.log(`Total setup: ${setupTime}ms`);
 
     const wrappedStream = (async function* (self: QueryService) {
       for await (const chunk of self.llm.stream(prompt, systemPrompt || defaultSystem)) {
         if (firstToken && chunk.delta) {
-          llmFirstTokenTime = Date.now() - llmStart;
-          self.logger.log(`LLM first token: ${llmFirstTokenTime}ms`);
+          latency.llmFirstToken = Date.now() - llmStart;
+          self.logger.log(`LLM first token: ${latency.llmFirstToken}ms`);
           firstToken = false;
         }
         yield chunk;
       }
+      latency.total = Date.now() - start;
     })(this);
-
-    const totalTime = Date.now() - start;
-    this.logger.log(`Total setup: ${totalTime}ms`);
 
     return {
       stream: wrappedStream,
       citations,
-      latency: {
-        embed: embedTime,
-        search: searchTime,
-        llmFirstToken: llmFirstTokenTime,
-        total: totalTime,
-      },
+      latency,
     };
   }
 }

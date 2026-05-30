@@ -23,4 +23,3 @@ exports.QueryModule = QueryModule = __decorate([
         providers: [query_service_1.QueryService],
     })
 ], QueryModule);
-//# sourceMappingURL=query.module.js.map

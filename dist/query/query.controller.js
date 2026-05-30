@@ -12,11 +12,9 @@ var __param = (this && this.__param) || function (paramIndex, decorator) {
     return function (target, key) { decorator(target, key, paramIndex); }
 };
 var QueryController_1;
-var _a;
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.QueryController = void 0;
 const common_1 = require("@nestjs/common");
-const express_1 = require("express");
 const query_service_1 = require("./query.service");
 let QueryController = QueryController_1 = class QueryController {
     constructor(queryService) {
@@ -72,11 +70,10 @@ __decorate([
     __param(0, (0, common_1.Body)()),
     __param(1, (0, common_1.Res)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Object, typeof (_a = typeof express_1.Response !== "undefined" && express_1.Response) === "function" ? _a : Object]),
+    __metadata("design:paramtypes", [Object, Object]),
     __metadata("design:returntype", Promise)
 ], QueryController.prototype, "query", null);
 exports.QueryController = QueryController = QueryController_1 = __decorate([
     (0, common_1.Controller)('query'),
     __metadata("design:paramtypes", [query_service_1.QueryService])
 ], QueryController);
-//# sourceMappingURL=query.controller.js.map

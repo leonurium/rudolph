@@ -13,7 +13,7 @@ export class LLMService {
   private readonly defaultModel: string;
 
   constructor() {
-    this.baseUrl = process.env.NINE_ROUTER_URL || 'https://router.schoolday.web.id';
+    this.baseUrl = process.env.NINE_ROUTER_URL || '';
     this.apiKey = process.env.NINE_ROUTER_API_KEY || '';
     this.defaultModel = process.env.LLM_MODEL || 'openai/minimax/MiniMax-M1';
   }

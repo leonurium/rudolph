@@ -4,7 +4,7 @@ let cachedHandler;
 
 async function getHandler() {
   if (!cachedHandler) {
-    const { getVercelListener } = require("../dist/src/vercel-listener");
+    const { getVercelListener } = require("../dist/vercel-listener");
     cachedHandler = await getVercelListener();
   }
   return cachedHandler;

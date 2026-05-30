@@ -5,17 +5,19 @@ export class EmbeddingService {
   private readonly logger = new Logger(EmbeddingService.name);
   private readonly baseUrl: string;
   private readonly apiKey: string;
+  private readonly defaultModel: string;
 
   constructor() {
-    this.baseUrl = process.env.NINE_ROUTER_URL || 'https://router.schoolday.web.id';
+    this.baseUrl = process.env.NINE_ROUTER_URL || '';
     this.apiKey = process.env.NINE_ROUTER_API_KEY || '';
+    this.defaultModel = process.env.LLM_MODEL_EMBEDDING || 'openrouter/openai/text-embedding-3-small';
   }
 
-  async embed(text: string, model = 'text-embedding-3-small'): Promise<number[]> {
+  async embed(text: string, model = this.defaultModel): Promise<number[]> {
     const url = `${this.baseUrl}/v1/embeddings`;
-    const body = { input: text, model };
+    const body = { input: text, model: model || this.defaultModel };
 
-    this.logger.debug(`Embedding text (${text.length} chars) via ${model}`);
+    this.logger.debug(`Embedding text (${text.length} chars) via ${model || this.defaultModel}`);
 
     const resp = await fetch(url, {
       method: 'POST',

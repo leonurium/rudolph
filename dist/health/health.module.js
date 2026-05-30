@@ -17,4 +17,3 @@ exports.HealthModule = HealthModule = __decorate([
         controllers: [health_controller_1.HealthController],
     })
 ], HealthModule);
-//# sourceMappingURL=health.module.js.map
