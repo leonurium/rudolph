@@ -13,7 +13,7 @@ async function bootstrap(): Promise<void> {
   });
   applyCommonNestConfig(app);
 
-  const port = Number(process.env.PORT ?? 3000);
+  const port = Number(process.env.PORT ?? 3099);
   await app.listen(port);
 
   if (process.env.VERCEL !== '1') {
