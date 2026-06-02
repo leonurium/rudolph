@@ -33,7 +33,7 @@ export class QueryService {
   ) {}
 
   async query(options: QueryOptions): Promise<QueryResult> {
-    const { question, topK = 5, threshold = 0.5, systemPrompt } = options;
+    const { question, topK = 5, threshold = 0.3, systemPrompt } = options;
     const start = Date.now();
 
     // 1. Embed the question

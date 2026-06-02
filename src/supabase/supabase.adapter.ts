@@ -26,7 +26,7 @@ export class SupabaseAdapter {
   async search(
     embedding: number[],
     topK = 5,
-    threshold = 0.5,
+    threshold = 0.3,
   ): Promise<SearchResult[]> {
     this.logger.debug(`Searching pgvector (top_k=${topK}, threshold=${threshold})`);
 
