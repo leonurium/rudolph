@@ -21,7 +21,7 @@ export class QueryController {
     const { question, project_id, top_k, threshold, system_prompt } = body;
 
     if (!question || typeof question !== 'string' || question.trim().length === 0) {
-      throw new HttpException('question is required', HttpStatus.BAD_REQUEST);
+      throw new HttpException('question is required', HttpStatus.UNPROCESSABLE_ENTITY);
     }
 
     // SSE headers

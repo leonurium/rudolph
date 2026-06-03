@@ -33,7 +33,7 @@ export class QueryService {
   ) {}
 
   async query(options: QueryOptions): Promise<QueryResult> {
-    const { question, projectId, topK = 5, threshold = 0.5, systemPrompt } = options;
+    const { question, projectId, topK = 5, threshold = 0.3, systemPrompt } = options;
     const start = Date.now();
 
     // Validate projectId early before expensive embedding/search
@@ -56,12 +56,35 @@ export class QueryService {
     const searchTime = Date.now() - searchStart;
     this.logger.log(`Search: ${searchTime}ms (${citations.length} results)`);
 
+    // Early return if no context found — skip LLM entirely
+    if (citations.length === 0) {
+      const setupTime = Date.now() - start;
+      this.logger.log(`Total setup: ${setupTime}ms (no context found)`);
+
+      const latency = {
+        embed: embedTime,
+        search: searchTime,
+        llmFirstToken: 0,
+        total: 0,
+      };
+
+      const noContextStream = (async function* () {
+        yield { delta: '', done: true };
+      })();
+
+      return {
+        stream: noContextStream,
+        citations,
+        latency,
+      };
+    }
+
     // 3. Format prompt with context
     const context = citations
       .map((c, i) => `[${i + 1}] ${c.document_title}: ${c.chunk_text}`)
       .join('\n\n');
 
-    const defaultSystem = `You are a helpful assistant. Answer the question based on the provided context. If the context doesn't contain enough information, say so. Cite sources using [N] notation.`;
+    const defaultSystem = `You are a helpful assistant. Answer the question based solely on the provided context. Use the information given — do not say you lack context or that there's not enough information. If the context is relevant, answer directly using it. Cite sources using [N] notation.`;
 
     const prompt = `Context:\n${context}\n\nQuestion: ${question}\n\nAnswer:`;
 

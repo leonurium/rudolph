@@ -77,7 +77,7 @@ describe('QueryService', () => {
     it('uses defaults for topK and threshold when not provided', async () => {
       supabase.projectExists.mockResolvedValue(true);
       const result = await service.query({ question: 'What is this?' });
-      expect(supabase.search).toHaveBeenCalledWith(expect.any(Array), 5, 0.5, undefined);
+      expect(supabase.search).toHaveBeenCalledWith(expect.any(Array), 5, 0.3, undefined);
       for await (const _ of result.stream) { /* noop */ }
     });
 
@@ -113,6 +113,23 @@ describe('QueryService', () => {
       for await (const _ of result.stream) { /* noop */ }
     });
 
+    it('skips LLM and returns empty stream when no context found', async () => {
+      supabase.projectExists.mockResolvedValue(true);
+      supabase.search.mockResolvedValue([]); // no results
+      const result = await service.query({ question: 'Something not in RAG' });
+      expect(llm.stream).not.toHaveBeenCalled();
+      const chunks: string[] = [];
+      let lastDone = false;
+      for await (const chunk of result.stream) {
+        if (chunk.done) lastDone = true;
+        else chunks.push(chunk.delta);
+      }
+      expect(chunks).toEqual([]);
+      expect(lastDone).toBe(true);
+      expect(result.citations).toEqual([]);
+      expect(result.latency.llmFirstToken).toBe(0);
+    });
+
     it('uses custom system prompt when provided', async () => {
       supabase.projectExists.mockResolvedValue(true);
       const customPrompt = 'You are a pirate assistant.';
@@ -142,14 +159,14 @@ describe('QueryService', () => {
       it('passes projectId to supabase.search', async () => {
         supabase.projectExists.mockResolvedValue(true);
         const result = await service.query({ question: 'What is this?', projectId: 'proj-1' });
-        expect(supabase.search).toHaveBeenCalledWith(expect.any(Array), 5, 0.5, 'proj-1');
+        expect(supabase.search).toHaveBeenCalledWith(expect.any(Array), 5, 0.3, 'proj-1');
         for await (const _ of result.stream) { /* noop */ }
       });
 
       it('passes undefined projectId when not provided', async () => {
         supabase.projectExists.mockResolvedValue(true);
         const result = await service.query({ question: 'What is this?' });
-        expect(supabase.search).toHaveBeenCalledWith(expect.any(Array), 5, 0.5, undefined);
+        expect(supabase.search).toHaveBeenCalledWith(expect.any(Array), 5, 0.3, undefined);
         for await (const _ of result.stream) { /* noop */ }
       });
 

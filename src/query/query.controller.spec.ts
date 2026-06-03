@@ -41,28 +41,28 @@ describe('QueryController', () => {
   });
 
   describe('POST /query — validation', () => {
-    it('throws 400 when question is missing', async () => {
+    it('throws 422 when question is missing', async () => {
       await expect(
         controller.query({ question: undefined as any }, mockRes as Response),
-      ).rejects.toMatchObject({ status: HttpStatus.BAD_REQUEST, message: 'question is required' });
+      ).rejects.toMatchObject({ status: HttpStatus.UNPROCESSABLE_ENTITY, message: 'question is required' });
     });
 
-    it('throws 400 when question is not a string', async () => {
+    it('throws 422 when question is not a string', async () => {
       await expect(
         controller.query({ question: 123 as any }, mockRes as Response),
-      ).rejects.toMatchObject({ status: HttpStatus.BAD_REQUEST, message: 'question is required' });
+      ).rejects.toMatchObject({ status: HttpStatus.UNPROCESSABLE_ENTITY, message: 'question is required' });
     });
 
-    it('throws 400 when question is only whitespace', async () => {
+    it('throws 422 when question is only whitespace', async () => {
       await expect(
         controller.query({ question: '   ' }, mockRes as Response),
-      ).rejects.toMatchObject({ status: HttpStatus.BAD_REQUEST, message: 'question is required' });
+      ).rejects.toMatchObject({ status: HttpStatus.UNPROCESSABLE_ENTITY, message: 'question is required' });
     });
 
-    it('throws 400 when question is an empty string', async () => {
+    it('throws 422 when question is an empty string', async () => {
       await expect(
         controller.query({ question: '' }, mockRes as Response),
-      ).rejects.toMatchObject({ status: HttpStatus.BAD_REQUEST, message: 'question is required' });
+      ).rejects.toMatchObject({ status: HttpStatus.UNPROCESSABLE_ENTITY, message: 'question is required' });
     });
   });
 
