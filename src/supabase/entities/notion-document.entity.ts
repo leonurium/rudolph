@@ -23,6 +23,9 @@ export class NotionDocument {
   @Column({ type: 'text' })
   url!: string;
 
+  @Column({ name: 'project_id', type: 'text', nullable: true })
+  projectId!: string | null;
+
   @Column({ type: 'jsonb', nullable: true })
   metadata!: Record<string, unknown> | null;
 

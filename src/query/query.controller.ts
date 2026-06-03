@@ -62,9 +62,13 @@ export class QueryController {
       this.logger.error(`Query failed: ${error.message}`);
 
       if (!res.headersSent) {
+        const status =
+          error instanceof HttpException
+            ? error.getStatus()
+            : HttpStatus.INTERNAL_SERVER_ERROR;
         throw new HttpException(
           error.message || 'Query failed',
-          HttpStatus.INTERNAL_SERVER_ERROR,
+          status,
         );
       }
 

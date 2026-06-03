@@ -1,4 +1,4 @@
-import { HttpException, HttpStatus } from '@nestjs/common';
+import { HttpException, HttpStatus, NotFoundException } from '@nestjs/common';
 import { Response } from 'express';
 import { QueryController } from './query.controller';
 import { QueryService } from './query.service';
@@ -175,6 +175,16 @@ describe('QueryController', () => {
       await expect(
         controller.query({ question: 'What is this?' }, mockRes as Response),
       ).rejects.toMatchObject({ status: HttpStatus.INTERNAL_SERVER_ERROR });
+    });
+
+    it('preserves 404 status from NotFoundException (unknown project_id)', async () => {
+      queryService.query.mockRejectedValue(
+        new NotFoundException('Project not found: unknown-proj'),
+      );
+
+      await expect(
+        controller.query({ question: 'What is this?', project_id: 'unknown-proj' }, mockRes as Response),
+      ).rejects.toMatchObject({ status: HttpStatus.NOT_FOUND });
     });
 
     it('sets error status from thrown exception', async () => {

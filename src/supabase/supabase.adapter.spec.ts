@@ -17,7 +17,9 @@ describe('SupabaseAdapter', () => {
     mockChunkRepo = {
       query: jest.fn().mockResolvedValue([...mockResults]),
     };
-    mockDocRepo = {};
+    mockDocRepo = {
+      count: jest.fn().mockResolvedValue(0),
+    };
     adapter = new SupabaseAdapter(mockChunkRepo, mockDocRepo);
   });
 
@@ -30,7 +32,7 @@ describe('SupabaseAdapter', () => {
   });
 
   describe('search()', () => {
-    it('calls chunkRepo.query with the vector SQL', async () => {
+    it('calls chunkRepo.query with vector SQL', async () => {
       const vector = [0.1, 0.2, 0.3];
       await adapter.search(vector);
       expect(mockChunkRepo.query).toHaveBeenCalled();
@@ -92,6 +94,50 @@ describe('SupabaseAdapter', () => {
           similarity: expect.any(Number),
         });
       });
+    });
+
+    describe('projectId filtering', () => {
+      it('adds project_id condition to SQL when projectId is provided', async () => {
+        const vector = [0.1, 0.2, 0.3];
+        await adapter.search(vector, 5, 0.5, 'proj-1');
+        const [sql, params] = mockChunkRepo.query.mock.calls[0];
+        expect(sql).toContain('nc.project_id = $3');
+        expect(params[2]).toBe('proj-1');
+      });
+
+      it('omits project_id condition when projectId is not provided', async () => {
+        const vector = [0.1, 0.2, 0.3];
+        await adapter.search(vector);
+        const [sql, params] = mockChunkRepo.query.mock.calls[0];
+        expect(sql).not.toContain('project_id');
+        expect(params).toHaveLength(2);
+      });
+
+      it('keeps nc.embedding IS NOT NULL condition alongside project_id', async () => {
+        const vector = [0.1, 0.2, 0.3];
+        await adapter.search(vector, 5, 0.5, 'proj-1');
+        const [sql] = mockChunkRepo.query.mock.calls[0];
+        expect(sql).toContain('nc.embedding IS NOT NULL');
+        expect(sql).toContain('nc.project_id = $3');
+        expect(sql).toContain('AND');
+      });
+    });
+  });
+
+  describe('projectExists()', () => {
+    it('returns true when documents exist for the project', async () => {
+      mockDocRepo.count.mockResolvedValue(5);
+      const result = await adapter.projectExists('proj-1');
+      expect(result).toBe(true);
+      expect(mockDocRepo.count).toHaveBeenCalledWith({
+        where: { projectId: 'proj-1' },
+      });
+    });
+
+    it('returns false when no documents exist for the project', async () => {
+      mockDocRepo.count.mockResolvedValue(0);
+      const result = await adapter.projectExists('proj-unknown');
+      expect(result).toBe(false);
     });
   });
 });

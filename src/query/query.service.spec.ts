@@ -1,3 +1,4 @@
+import { NotFoundException } from '@nestjs/common';
 import { QueryService, QueryOptions } from './query.service';
 import { EmbeddingService } from '../embedding/embedding.service';
 import { LLMService } from '../llm/llm.service';
@@ -43,6 +44,7 @@ describe('QueryService', () => {
 
     supabase = {
       search: jest.fn().mockResolvedValue(mockCitations),
+      projectExists: jest.fn(),
     } as any;
 
     service = new QueryService(embedding, llm, supabase);
@@ -58,6 +60,7 @@ describe('QueryService', () => {
 
   describe('query()', () => {
     it('embeds the question', async () => {
+      supabase.projectExists.mockResolvedValue(true);
       const result = await service.query({ question: 'What is this?' });
       expect(embedding.embed).toHaveBeenCalledWith('What is this?');
       // consume the stream so the wrapped generator finishes
@@ -65,18 +68,21 @@ describe('QueryService', () => {
     });
 
     it('searches supabase with correct args', async () => {
+      supabase.projectExists.mockResolvedValue(true);
       const result = await service.query({ question: 'What is this?', topK: 10, threshold: 0.7 });
-      expect(supabase.search).toHaveBeenCalledWith(expect.any(Array), 10, 0.7);
+      expect(supabase.search).toHaveBeenCalledWith(expect.any(Array), 10, 0.7, undefined);
       for await (const _ of result.stream) { /* noop */ }
     });
 
     it('uses defaults for topK and threshold when not provided', async () => {
+      supabase.projectExists.mockResolvedValue(true);
       const result = await service.query({ question: 'What is this?' });
-      expect(supabase.search).toHaveBeenCalledWith(expect.any(Array), 5, 0.5);
+      expect(supabase.search).toHaveBeenCalledWith(expect.any(Array), 5, 0.5, undefined);
       for await (const _ of result.stream) { /* noop */ }
     });
 
     it('streams LLM with formatted prompt', async () => {
+      supabase.projectExists.mockResolvedValue(true);
       const result = await service.query({ question: 'What is this?' });
       // llm.stream() is called lazily when the wrapper generator is iterated
       for await (const _ of result.stream) { /* noop */ }
@@ -89,12 +95,14 @@ describe('QueryService', () => {
     });
 
     it('returns citations from search', async () => {
+      supabase.projectExists.mockResolvedValue(true);
       const result = await service.query({ question: 'What is this?' });
       expect(result.citations).toEqual(mockCitations);
       for await (const _ of result.stream) { /* noop */ }
     });
 
     it('returns latency fields', async () => {
+      supabase.projectExists.mockResolvedValue(true);
       const result = await service.query({ question: 'What is this?' });
       expect(result.latency).toMatchObject({
         embed: expect.any(Number),
@@ -106,6 +114,7 @@ describe('QueryService', () => {
     });
 
     it('uses custom system prompt when provided', async () => {
+      supabase.projectExists.mockResolvedValue(true);
       const customPrompt = 'You are a pirate assistant.';
       const result = await service.query({ question: 'What is this?', systemPrompt: customPrompt });
       for await (const _ of result.stream) { /* noop */ }
@@ -114,6 +123,7 @@ describe('QueryService', () => {
     });
 
     it('yields chunks from LLM stream', async () => {
+      supabase.projectExists.mockResolvedValue(true);
       const result = await service.query({ question: 'What is this?' });
       const chunks: string[] = [];
       let lastDone = false;
@@ -126,6 +136,47 @@ describe('QueryService', () => {
       }
       expect(chunks).toEqual(['Answer: ', 'test response']);
       expect(lastDone).toBe(true);
+    });
+
+    describe('projectId handling', () => {
+      it('passes projectId to supabase.search', async () => {
+        supabase.projectExists.mockResolvedValue(true);
+        const result = await service.query({ question: 'What is this?', projectId: 'proj-1' });
+        expect(supabase.search).toHaveBeenCalledWith(expect.any(Array), 5, 0.5, 'proj-1');
+        for await (const _ of result.stream) { /* noop */ }
+      });
+
+      it('passes undefined projectId when not provided', async () => {
+        supabase.projectExists.mockResolvedValue(true);
+        const result = await service.query({ question: 'What is this?' });
+        expect(supabase.search).toHaveBeenCalledWith(expect.any(Array), 5, 0.5, undefined);
+        for await (const _ of result.stream) { /* noop */ }
+      });
+
+      it('throws NotFoundException when projectId does not exist', async () => {
+        supabase.projectExists.mockResolvedValue(false);
+        await expect(
+          service.query({ question: 'What is this?', projectId: 'unknown-proj' }),
+        ).rejects.toThrow(NotFoundException);
+        expect(supabase.search).not.toHaveBeenCalled();
+        expect(embedding.embed).not.toHaveBeenCalled();
+      });
+
+      it('checks projectExists before embedding', async () => {
+        supabase.projectExists.mockResolvedValue(false);
+        await expect(
+          service.query({ question: 'What is this?', projectId: 'unknown-proj' }),
+        ).rejects.toThrow(NotFoundException);
+        expect(supabase.projectExists).toHaveBeenCalledWith('unknown-proj');
+      });
+
+      it('checks projectExists before search', async () => {
+        supabase.projectExists.mockResolvedValue(true);
+        const result = await service.query({ question: 'What is this?', projectId: 'proj-1' });
+        expect(supabase.projectExists).toHaveBeenCalledWith('proj-1');
+        expect(supabase.search).toHaveBeenCalled();
+        for await (const _ of result.stream) { /* noop */ }
+      });
     });
   });
 });

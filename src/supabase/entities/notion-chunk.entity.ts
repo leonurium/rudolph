@@ -17,6 +17,9 @@ export class NotionChunk {
   @Column({ name: 'chunk_index', type: 'integer' })
   chunkIndex!: number;
 
+  @Column({ name: 'project_id', type: 'text', nullable: true })
+  projectId!: string | null;
+
   @Column({ name: 'content_hash', type: 'text', nullable: true })
   contentHash!: string | null;
 

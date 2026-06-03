@@ -1,4 +1,4 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { EmbeddingService } from '../embedding/embedding.service';
 import { LLMService, LLMStreamChunk } from '../llm/llm.service';
 import { SupabaseAdapter, SearchResult } from '../supabase/supabase.adapter';
@@ -33,8 +33,16 @@ export class QueryService {
   ) {}
 
   async query(options: QueryOptions): Promise<QueryResult> {
-    const { question, topK = 5, threshold = 0.5, systemPrompt } = options;
+    const { question, projectId, topK = 5, threshold = 0.5, systemPrompt } = options;
     const start = Date.now();
+
+    // Validate projectId early before expensive embedding/search
+    if (projectId) {
+      const exists = await this.supabase.projectExists(projectId);
+      if (!exists) {
+        throw new NotFoundException(`Project not found: ${projectId}`);
+      }
+    }
 
     // 1. Embed the question
     const embedStart = Date.now();
@@ -44,7 +52,7 @@ export class QueryService {
 
     // 2. Vector search
     const searchStart = Date.now();
-    const citations = await this.supabase.search(vector, topK, threshold);
+    const citations = await this.supabase.search(vector, topK, threshold, projectId);
     const searchTime = Date.now() - searchStart;
     this.logger.log(`Search: ${searchTime}ms (${citations.length} results)`);
 
